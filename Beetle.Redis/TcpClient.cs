@@ -210,6 +210,8 @@ namespace Beetle.Redis
             try
             {
                 int count = cmd.toData(sdata);
+                //开发测试时用于友好显示数据--Redis协议
+                //string str = System.Text.Encoding.Default.GetString(sdata,0,count);
                 if (!client.Send(sdata, 0, count))
                 {
                     throw new Exception(string.Format("{0} client disconnect!", client.mHost));

@@ -66,12 +66,22 @@ namespace Beetle.Redis
             return db.Get<T>((string)DataKey, DataType);
         }
 
-        public void Set(object value, RedisClient db = null)
+        public bool Set(object value, RedisClient db = null)
         {
             db = RedisClient.GetClient(db);
-            db.Set((string)DataKey, value, DataType);
+            return db.Set((string)DataKey, value, DataType);
         }
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="exprieSeconds"></param>
+        /// <param name="db"></param>
+        public bool Set(object value, long exprieSeconds, RedisClient db = null)
+        {
+            db = RedisClient.GetClient(db);
+            return db.Set((string)DataKey, value, exprieSeconds, DataType);
+        }
         public void SetValues(params object[] values)
         {
             SetValues(values, null);

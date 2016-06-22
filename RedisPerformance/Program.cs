@@ -18,6 +18,9 @@ namespace RedisPerformance
     /// https://github.com/IKende/IKendeLib/wiki/Beetle.Redis
     /// 参考04： 
     /// http://ec.ikende.com/redis
+    /// 参考05：
+    /// Redis协议详解
+    /// http://www.ikende.com/blog/767ed431c38740c38a46fb8c483ef39b
     /// </summary>
     class Program
     {
@@ -28,12 +31,13 @@ namespace RedisPerformance
         //测试数据
         public static Byte[] TestData;
         public static string TestData2;
-        public static int TestDataSize = 1 * 1024;
+        public static int TestDataSize = 1*1024;
         public static string LogPath = @"D:\temp-test";
         public static string LogName = "log_BeetleRedis.txt";
 
         static void Main(string[] args)
         {
+            //Demo();
             BuildTestData2();
             Init();
             //
@@ -41,8 +45,8 @@ namespace RedisPerformance
             {
                 try
                 {
-                    PerformanceTest.Time("Test_Incr", 40, 5000, (Test_Incr));
-                    PerformanceTest.Time("Test_Decr", 40, 5000, (Test_Decr));
+                    //PerformanceTest.Time("Test_Incr", 40, 5000, (Test_Incr));
+                    //PerformanceTest.Time("Test_Decr", 40, 5000, (Test_Decr));
                     PerformanceTest.Time("Test_Set", 40, 5000, (Test_Set));
                     PerformanceTest.Time("Test_Get", 40, 5000, (Test_Get));
                 }
@@ -60,41 +64,28 @@ namespace RedisPerformance
             End();
         }
 
-        static void Demo()
-        {
-            StringKey key = "-----------------01";
-            //从0开始，减1操作，
-            var t1 = key.Decr();
-            key.Delete();
-            //如果获不到值则返回为NULL
-            var t2 = key.Get<string>();
-        }
-
-        static void Test_Incr()
-        {
-            StringKey key = "IncrOrDecr";
-            var t1 = key.Incr();
-        }
-        static void Test_Decr()
-        {
-            StringKey key = "IncrOrDecr";
-            var t1 = key.Decr();
-        }
         static void Test_Set()
         {
             //
             //设置有过期时间的key的时候必须先设置set,再设置Expire
             var guid = "201606201340";
             StringKey key = guid;
-            key.Set(TestData2);//1
-            key.Expire(600);//2
-            var s = key.TTL();
-            if (s == 0)
+            var isOk = key.Set(TestData2, 600);
+            if (!isOk)
             {
                 var current = Interlocked.Increment(ref Count);
-                Console.WriteLine("{0} {1}", current, s);
-                Logger.Info(string.Format("Test_Set--{0} {1}--Time:{2}", current, s, DateTime.Now));
+                Console.WriteLine("{0} {1}", current, isOk);
+                Logger.Info(string.Format("Test_Set--{0} {1}--Time:{2}", current, isOk, DateTime.Now));
             }
+            //key.Set(TestData2); //1
+            //key.Expire(600); //2
+            //var s = key.TTL();
+            //if (s == 0)
+            //{
+            //    var current = Interlocked.Increment(ref Count);
+            //    Console.WriteLine("{0} {1}", current, s);
+            //    Logger.Info(string.Format("Test_Set--{0} {1}--Time:{2}", current, s, DateTime.Now));
+            //}
         }
 
         static void Test_Get()
@@ -109,6 +100,34 @@ namespace RedisPerformance
                 Logger.Info(string.Format("Test_Get--{0}--Time:{1} ", s, DateTime.Now));
             }
         }
+
+        static void Demo()
+        {
+            StringKey key = "-----------------02";
+            var a1 = key.Set("1");
+            var isOk = key.Set("t", 600);
+            var t3 = key.Get<string>();
+            var tt = key.TTL();
+            key.Delete();
+            //从0开始，减1操作，
+            var t1 = key.Decr();
+            key.Delete();
+            //如果获不到值则返回为NULL
+            var t2 = key.Get<string>();
+        }
+
+        static void Test_Incr()
+        {
+            StringKey key = "IncrOrDecr";
+            var t1 = key.Incr();
+        }
+
+        static void Test_Decr()
+        {
+            StringKey key = "IncrOrDecr";
+            var t1 = key.Decr();
+        }
+
         static void Example()
         {
             var current = Interlocked.Increment(ref Count);
@@ -135,18 +154,21 @@ namespace RedisPerformance
                 }
             }
         }
+
         static void Init()
         {
             Logger.Initialize(LogPath, LogName);
             PerformanceTest.Initialize();
             BuildTestData();
         }
+
         private static void End()
         {
             Console.WriteLine("Test End");
             Logger.Close();
             Console.Read();
         }
+
         static void BuildTestData()
         {
             TestData = new byte[TestDataSize];
@@ -155,6 +177,7 @@ namespace RedisPerformance
                 TestData[i] = 0x30;
             }
         }
+
         static void BuildTestData2()
         {
             for (int i = 0; i < TestDataSize; i++)

@@ -683,7 +683,7 @@ namespace Beetle.Redis
             }
         }
 
-        public void Set(string key, object value, DataType type)
+        public bool Set(string key, object value, DataType type)
         {
             using (RedisHost.ClientItem c = GetWriter())
             {
@@ -695,6 +695,36 @@ namespace Beetle.Redis
                     ToRedis(value, type, cmd);
                     using (Result result = TcpClient.Send(cmd, c.Client))
                     {
+                        var isOk = result.ResultData.ToString().Trim();
+                        if (isOk == "OK")
+                        {
+                            return true;
+                        }
+                        return false;
+                    }
+                }
+            }
+        }
+
+        public bool Set(string key, object value, long exprieSeconds, DataType type)
+        {
+            using (RedisHost.ClientItem c = GetWriter())
+            {
+                using (Command cmd = new Command())
+                {
+                    cmd.Add(CONST_VALURES.REDIS_COMMAND_SET);
+                    cmd.Add(key);
+                    ToRedis(value, type, cmd);
+                    cmd.Add("EX");
+                    cmd.Add(exprieSeconds.ToString());
+                    using (Result result = TcpClient.Send(cmd, c.Client))
+                    {
+                        var isOk = result.ResultData.ToString().Trim();
+                        if (isOk == "OK")
+                        {
+                            return true;
+                        }
+                        return false;
                     }
                 }
             }
